@@ -2,7 +2,7 @@ package com.chat.chat_app_backend.controllers;
 
 import com.chat.chat_app_backend.entities.Message;
 import com.chat.chat_app_backend.entities.Room;
-import com.chat.chat_app_backend.repositories.RoomRepository;
+import com.chat.chat_app_backend.services.RoomService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,45 +15,27 @@ import java.util.List;
 @RequiredArgsConstructor
 @CrossOrigin("*")
 public class RoomController {
-    private final RoomRepository roomRepository;
-    @PostMapping
-    public ResponseEntity<?> createRoom(@RequestBody String roomId){
-        if(roomRepository.findByRoomId(roomId)!=null){
-            return ResponseEntity.badRequest().body("Room already exists!");
-        }
+    private final RoomService roomService;
 
-        Room room = new Room();
-        room.setRoomId(roomId);
-        Room saveRoom = roomRepository.save(room);
-        return ResponseEntity.status(HttpStatus.CREATED).body(saveRoom);
+    @PostMapping
+    public ResponseEntity<Room> createRoom(@RequestBody String roomId) {
+        Room createdRoom = roomService.createRoom(roomId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdRoom);
     }
 
     @GetMapping("/{roomId}")
-    public ResponseEntity<?> joinRoom(@PathVariable String roomId){
-        Room room = roomRepository.findByRoomId(roomId);
-        if(room == null){
-            return ResponseEntity.badRequest()
-                    .body("Room not found!");
-        }
-
+    public ResponseEntity<Room> joinRoom(@PathVariable String roomId) {
+        Room room = roomService.getRoom(roomId);
         return ResponseEntity.ok(room);
     }
 
     @GetMapping("/{roomId}/messages")
-    public ResponseEntity<List<Message>> getMessage(@PathVariable String roomId,
-                                                    @RequestParam(value = "page", defaultValue = "0", required = false) int page,
-                                                    @RequestParam(value = "size", defaultValue = "20", required = false) int size){
-        Room room = roomRepository.findByRoomId(roomId);
-        if(room == null){
-            return ResponseEntity.badRequest().build();
-        }
-
-        List<Message> messages = room.getMessages();
-        int start = Math.max(0, messages.size()-(page+1)*size);
-        int end = Math.min(messages.size(), start+size);
-
-        List<Message> paginatedMessages = messages.subList(start, end);
-
-        return ResponseEntity.ok(paginatedMessages);
+    public ResponseEntity<List<Message>> getMessages(
+            @PathVariable String roomId,
+            @RequestParam(value = "page", defaultValue = "0", required = false) int page,
+            @RequestParam(value = "size", defaultValue = "20", required = false) int size
+    ) {
+        List<Message> messages = roomService.getMessages(roomId, page, size);
+        return ResponseEntity.ok(messages);
     }
 }
