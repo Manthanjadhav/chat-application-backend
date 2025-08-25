@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 public class ChatController {
     private final ChatService chatService;
 
-    @MessageMapping("/sendMessage/{roomId}")
-    @SendTo("/topic/room/{roomId}")
+    @MessageMapping("/sendMessage/{roomId}")//publish to this url /app/sendMessage/roomId
+    @SendTo("/topic/room/{roomId}")//subscribe to this url
     public Message sendMessage(
             @DestinationVariable String roomId,
             @RequestBody MessageRequest request
